@@ -8,7 +8,7 @@ export const Product = list({
     name: text({
       isRequired: true,
     }),
-    desription: text({
+    description: text({
       ui: {
         displayMode: 'textarea',
       }
