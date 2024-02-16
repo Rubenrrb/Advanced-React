@@ -1,4 +1,3 @@
-import { object } from 'prop-types';
 import { useState } from 'react';
 
 export default function useForm(initial = {}) {

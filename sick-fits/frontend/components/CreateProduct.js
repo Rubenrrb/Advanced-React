@@ -1,31 +1,73 @@
-/* eslint-disable react-hooks/rules-of-hooks */
+import { useMutation } from '@apollo/client';
+import gql from 'graphql-tag';
+import Router from 'next/router';
+import { ALL_PRODUCTS_QUERY } from './Products';
 import useForm from '../lib/useForm';
+import DisplayError from './ErrorMessage';
 import Form from './styles/Form';
 
+const CREATE_PRODUCT_MUTATION = gql`
+  mutation CREATE_PRODUCT_MUTATION(
+    # Which variables are getting passed in? And What types are they
+    $name: String!
+    $description: String!
+    $price: Int!
+    $image: Upload
+  ) {
+    createProduct(
+      data: {
+        name: $name
+        description: $description
+        price: $price
+        status: "AVAILABLE"
+        photo: { create: { image: $image, altText: $name } }
+      }
+    ) {
+      id
+      price
+      description
+      name
+    }
+  }
+`;
+
 export default function CreateProduct() {
-  const { inputs, handleChange, resetForm, clearForm } = useForm({
+  const { inputs, handleChange, clearForm, resetForm } = useForm({
     image: '',
     name: 'Nice Shoes',
-    price: 30,
-    description: 'These are the best shoes',
+    price: 34234,
+    description: 'These are the best shoes!',
   });
-
+  const [createProduct, { loading, error, data }] = useMutation(
+    CREATE_PRODUCT_MUTATION,
+    {
+      variables: inputs,
+      refetchQueries: [{ query: ALL_PRODUCTS_QUERY }],
+    }
+  );
   return (
     <Form
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
         console.log(inputs);
+        // Submit the inputfields to the backend:
+        const res = await createProduct();
+        clearForm();
+        Router.push({
+          pathname: `/product/${res.data.createProduct.id}`,
+        });
       }}
     >
-      <fieldset>
+      <DisplayError error={error} />
+      <fieldset disabled={loading} aria-busy={loading}>
         <label htmlFor="image">
           Image
           <input
+            required
             type="file"
             id="image"
             name="image"
             onChange={handleChange}
-            required
           />
         </label>
         <label htmlFor="name">
@@ -35,9 +77,8 @@ export default function CreateProduct() {
             id="name"
             name="name"
             placeholder="Name"
-            value={inputs?.name}
+            value={inputs.name}
             onChange={handleChange}
-            required
           />
         </label>
         <label htmlFor="price">
@@ -46,30 +87,23 @@ export default function CreateProduct() {
             type="number"
             id="price"
             name="price"
-            placeholder="1000"
-            value={inputs?.price}
+            placeholder="price"
+            value={inputs.price}
             onChange={handleChange}
-            required
           />
         </label>
         <label htmlFor="description">
           Description
           <textarea
             id="description"
-            name="price"
+            name="description"
             placeholder="Description"
-            value={inputs?.description}
+            value={inputs.description}
             onChange={handleChange}
-            required
           />
         </label>
-        {/* <button type="button" onClick={resetForm}>
-          Reset Form
-        </button>
-        <button type="button" onClick={clearForm}>
-          Clear Form
-        </button> */}
-        <button type="submit">+ Add product</button>
+
+        <button type="submit">+ Add Product</button>
       </fieldset>
     </Form>
   );
