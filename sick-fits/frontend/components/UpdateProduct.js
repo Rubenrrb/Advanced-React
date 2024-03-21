@@ -1,11 +1,10 @@
 /* eslint-disable react/prop-types */
+import { useMutation, useQuery } from '@apollo/client';
 import gql from 'graphql-tag';
-import { useQuery, useMutation } from '@apollo/client';
-import Form from './styles/Form';
-import DisplayError from './ErrorMessage';
 import useForm from '../lib/useForm';
+import DisplayError from './ErrorMessage';
+import Form from './styles/Form';
 
-// get single product
 const SINGLE_PRODUCT_QUERY = gql`
   query SINGLE_PRODUCT_QUERY($id: ID!) {
     Product(where: { id: $id }) {
@@ -16,8 +15,6 @@ const SINGLE_PRODUCT_QUERY = gql`
     }
   }
 `;
-
-// mutation to update product
 
 const UPDATE_PRODUCT_MUTATION = gql`
   mutation UPDATE_PRODUCT_MUTATION(
@@ -39,27 +36,24 @@ const UPDATE_PRODUCT_MUTATION = gql`
 `;
 
 export default function UpdateProduct({ id }) {
+  // 1. We need to get the existing product
   const { data, error, loading } = useQuery(SINGLE_PRODUCT_QUERY, {
     variables: { id },
   });
-
+  // 2. We need to get the mutation to update the product
   const [
     updateProduct,
     { data: updateData, error: updateError, loading: updateLoading },
   ] = useMutation(UPDATE_PRODUCT_MUTATION);
-
-  // create state for form inputs
-
+  // 2.5 Create some state for the form inputs:
   const { inputs, handleChange, clearForm, resetForm } = useForm(data?.Product);
-
-  if (loading) return <p>Loading...</p>;
-
+  console.log(inputs);
+  if (loading) return <p>loading...</p>;
+  // 3. We need the form to handle the updates
   return (
     <Form
       onSubmit={async (e) => {
         e.preventDefault();
-        console.log(inputs);
-        // Submit the inputfields to the backend:
         const res = await updateProduct({
           variables: {
             id,
@@ -68,6 +62,15 @@ export default function UpdateProduct({ id }) {
             price: inputs.price,
           },
         }).catch(console.error);
+        console.log(res);
+        // Submit the inputfields to the backend:
+        // TODO: Handle Submit!!!
+        // const res = await createProduct();
+        // clearForm();
+        // // Go to that product's page!
+        // Router.push({
+        //   pathname: `/product/${res.data.createProduct.id}`,
+        // });
       }}
     >
       <DisplayError error={error || updateError} />
